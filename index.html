@@ -36,6 +36,7 @@
 </body>
 
 <script>
+    Tone.getContext().latencyHint = 'interactive';
     sensitivity_pressure = 50;
     sensitivity_minimum = 0.2;
     sensitivity_speed = 3;
@@ -63,7 +64,9 @@
 
     // Create a synth =============================================================================
 
-    const synth = new Tone.Synth().toDestination();
+    const synth = new Tone.Synth({
+        envelope: { attack: 0.05, decay: 0.2, sustain: 0.5, release: 0.2 }
+    }).toDestination();
     var noteDefintion = {
         0: 'C4',
         1: 'C4',
@@ -262,9 +265,9 @@
         text_volume.textContent = `Volume: ${volume}`;
 
         if (volume > 0.1) {
-            synth.triggerAttack(noteDefintion[note], current_time / 1000, volume);
+            synth.triggerAttack(noteDefintion[note], Tone.now(), volume);
         } else {
-            synth.triggerRelease();
+            synth.triggerRelease(Tone.now());
         }
     }
 </script>
