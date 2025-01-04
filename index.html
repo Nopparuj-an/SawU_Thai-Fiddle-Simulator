@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Thai Fiddle</title>
+    <script src="http://unpkg.com/tone"></script>
 </head>
 
 <body>
@@ -39,9 +40,10 @@
     sensitivity_minimum = 0.2;
     sensitivity_speed = 3;
     loop_dt = 0.05;
-    iir_constant = 0.9;
+    iir_constant = 0.5;
 
     // Internal variables
+    var current_time = 0;
     var activeButtons = new Set();
     var start_x = 0;
     var start_y = 0;
@@ -59,6 +61,22 @@
         calculateSpeed();
     }, loop_dt * 1000);
 
+    // Create a synth =============================================================================
+
+    const synth = new Tone.Synth().toDestination();
+    var noteDefintion = {
+        0: 'C4',
+        1: 'C4',
+        2: 'D4',
+        3: 'E4',
+        4: 'F4',
+        5: 'G4',
+        6: 'A4',
+        7: 'B4',
+        8: 'C5',
+        9: 'D5',
+    };
+
     // Setup touch area ===========================================================================
     touchArea.addEventListener('touchmove', handleTouchMove, false);
     touchArea.addEventListener('touchstart', handleTouchStart, false);
@@ -68,6 +86,7 @@
     // Set start position
     function handleTouchStart(event) {
         event.preventDefault();
+        Tone.start();
         const touch = event.touches[0];
         start_x = touch.clientX;
         start_y = touch.clientY;
@@ -76,6 +95,7 @@
 
     function handleMouseClick(event) {
         event.preventDefault();
+        Tone.start();
         start_x = event.clientX;
         start_y = event.clientY;
         text_start.textContent = `Start: ${start_x}, ${start_y}`;
@@ -175,10 +195,14 @@
         // Input: pos_y, dt
         // Output: speed
         dy = pos_y - pos_y_last;
+        current_time += loop_dt;
 
         // Normalize speed by display height
         dy = sensitivity_speed * dy / window.innerHeight;
         raw_speed = dy / loop_dt;
+
+        // Cap raw_speed to [-2,2]
+        raw_speed = Math.min(2, Math.max(-2, raw_speed));
 
         // Apply IIR filter
         raw_speed = iir_constant * speed + (1 - iir_constant) * raw_speed;
@@ -197,6 +221,12 @@
         }
         volume = Math.round(volume * 1000) / 1000;
         text_volume.textContent = `Volume: ${volume}`;
+
+        if (volume > 0.1) {
+            synth.triggerAttack(noteDefintion[note], current_time/1000, volume);
+        } else {
+            synth.triggerRelease();
+        }
     }
 </script>
 
