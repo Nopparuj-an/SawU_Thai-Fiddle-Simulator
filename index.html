@@ -17,6 +17,7 @@
         <div class="col touchPanel">
             <div id="touchArea" style="width: 100%; height: 100%;">
                 <div id="startLine" style="position: absolute; width: 2px; height: 100%; background: #696969; display: none;"></div>
+                <p class="debug_text" id="text_keys">Key: C</p>
                 <p class="debug_text" id="text_fingers">Button: Touch to start</p>
                 <p class="debug_text" id="text_start">Start: Touch to start</p>
                 <p class="debug_text" id="text_pos">Position: Touch to start</p>
@@ -32,17 +33,18 @@
             <button id="button2">S กลาง</button>
             <button id="button3">A นาง</button>
             <button id="button4">SHIFT ก้อย</button>
+            <button id="button5" style="background-color: #0051a7;">X ชี้</button>
+            <button id="button6" style="background-color: #0051a7;">Z กลาง</button>
         </div>
     </div>
 </body>
 
 <script>
-    Tone.getContext().latencyHint = 'interactive';
     sensitivity_pressure = 50;
     sensitivity_minimum = 0.2;
     sensitivity_speed = 3;
     loop_dt = 0.05;
-    iir_constant = 0.8;
+    iir_constant = 0.5;
 
     // Internal variables
     var current_time = 0;
@@ -65,21 +67,18 @@
 
     // Create a synth =============================================================================
 
+    Tone.getContext().latencyHint = 'interactive';
     const synth = new Tone.Synth({
         envelope: { attack: 0.05, decay: 0.2, sustain: 0.5, release: 0.2 }
     }).toDestination();
-    var noteDefintion = {
-        0: 'C4',
-        1: 'C4',
-        2: 'D4',
-        3: 'E4',
-        4: 'F4',
-        5: 'G4',
-        6: 'A4',
-        7: 'B4',
-        8: 'C5',
-        9: 'D5',
-    };
+    
+    // Thai-Western note mapping (index 0 unused)
+    var noteDefinition_A =  ['A3',  'A3',  'B3',  'C#4', 'D4',  'E4',  'F#4', 'G#4', 'A4',  'B4',  'C#5', 'D5'];
+    var noteDefinition_Bb = ['Bb3', 'Bb3', 'C4',  'D4',  'Eb4', 'F4',  'G4',  'A4',  'Bb4', 'C5',  'D5',  'Eb5'];
+    var noteDefinition_B =  ['B3',  'B3',  'C#4', 'D#4', 'E4',  'F#4', 'G#4', 'A#4', 'B4',  'C#5', 'D#5', 'E5'];
+    var noteDefinition_C =  ['C4',  'C4',  'D4',  'E4',  'F4',  'G4',  'A4',  'B4',  'C5',  'D5',  'E5',  'F5'];
+
+    var noteDefinition = noteDefinition_C;
 
     // Setup touch area ===========================================================================
     touchArea.addEventListener('touchmove', handleTouchMove, false);
@@ -223,6 +222,10 @@
 
         note = Array.from(activeButtons).reduce((acc, cur) => {
             switch (cur.id) {
+                case 'button6': // กลาง 2
+                    return start_note + 6;
+                case 'button5': // ชี้ 2
+                    return start_note + 5;
                 case 'button4': // ก้อย
                     return start_note + 4;
                 case 'button3': // นาง
@@ -235,7 +238,7 @@
                     return start_note;
             }
         }, start_note);
-        text_note.textContent = `Note: ${note}`;
+        text_note.textContent = `Note: ${note} ${noteDefinition[note]}`;
     }
 
     function calculateSpeed() {
@@ -270,7 +273,7 @@
         text_volume.textContent = `Volume: ${volume}`;
 
         if (volume > 0.1) {
-            synth.triggerAttack(noteDefintion[note], Tone.now(), volume);
+            synth.triggerAttack(noteDefinition[note], Tone.now(), volume);
         } else {
             synth.triggerRelease(Tone.now());
         }
@@ -288,6 +291,24 @@
         // Reverse the order of buttons inside buttonArea
         const buttons = Array.from(buttonArea.children);
         buttons.reverse().forEach(button => buttonArea.appendChild(button));
+    }
+
+    function switchKey(value) {
+        switch (value) {
+            case 'A':
+                noteDefinition = noteDefinition_A;
+                break;
+            case 'Bb':
+                noteDefinition = noteDefinition_Bb;
+                break;
+            case 'B':
+                noteDefinition = noteDefinition_B;
+                break;
+            case 'C':
+                noteDefinition = noteDefinition_C;
+                break;
+        }
+        text_keys.textContent = `Key: ${value}`;
     }
 </script>
 
@@ -341,7 +362,7 @@
 
     .buttonArea button {
         width: 90%;
-        padding: 40px 0;
+        padding: 38px 0;
         margin: 5px 0;
         font-size: 18px;
         border: none;
