@@ -10,27 +10,28 @@
 
 <body>
     <div class="row header">
-        <h1>Thai Fiddle</h1>
+        <h1>ซออู้</h1>
         &nbsp; By Nopparuj-An
     </div>
     <div class="row content">
         <div class="col touchPanel">
             <div id="touchArea" style="width: 100%; height: 100%;">
-                <p id="text_fingers" style="margin-left: 20px; color: #696969;">Button: Touch to start</p>
-                <p id="text_start" style="margin-left: 20px; color: #696969;">Start: Touch to start</p>
-                <p id="text_pos" style="margin-left: 20px; color: #696969;">Position: Touch to start</p>
-                <p id="text_pressure" style="margin-left: 20px; color: #696969;">Pressure: Touch to start</p>
-                <p id="text_speed" style="margin-left: 20px; color: #696969;">Speed: Touch to start</p>
-                <p id="text_volume" style="margin-left: 20px; color: #696969;">Volume: Touch to start</p>
-                <p id="text_note" style="margin-left: 20px; color: #696969;">Note: Touch to start</p>
+                <div id="startLine" style="position: absolute; width: 2px; height: 100%; background: #696969; display: none;"></div>
+                <p class="debug_text" id="text_fingers">Button: Touch to start</p>
+                <p class="debug_text" id="text_start">Start: Touch to start</p>
+                <p class="debug_text" id="text_pos">Position: Touch to start</p>
+                <p class="debug_text" id="text_pressure">Pressure: Touch to start</p>
+                <p class="debug_text" id="text_speed">Speed: Touch to start</p>
+                <p class="debug_text" id="text_volume">Volume: Touch to start</p>
+                <p class="debug_text" id="text_note">Note: Touch to start</p>
             </div>
             <div id="touchCursor"></div>
         </div>
         <div class="col buttonArea">
-            <button id="button1">ชี้</button>
-            <button id="button2">กลาง</button>
-            <button id="button3">นาง</button>
-            <button id="button4">ก้อย</button>
+            <button id="button1">D ชี้</button>
+            <button id="button2">S กลาง</button>
+            <button id="button3">A นาง</button>
+            <button id="button4">SHIFT ก้อย</button>
         </div>
     </div>
 </body>
@@ -94,6 +95,8 @@
         start_x = touch.clientX;
         start_y = touch.clientY;
         text_start.textContent = `Start: ${start_x}, ${start_y}`;
+        startLine.style.left = `${start_x}px`;
+        startLine.style.display = 'block';
     }
 
     function handleMouseClick(event) {
@@ -102,6 +105,8 @@
         start_x = event.clientX;
         start_y = event.clientY;
         text_start.textContent = `Start: ${start_x}, ${start_y}`;
+        startLine.style.left = `${start_x}px`;
+        startLine.style.display = 'block';
     }
 
     // Track movement
@@ -270,6 +275,20 @@
             synth.triggerRelease(Tone.now());
         }
     }
+
+    // Menu and settings ==========================================================================
+    function swapPanels() {
+        const touchPanel = document.querySelector('.touchPanel');
+        const buttonArea = document.querySelector('.buttonArea');
+        const content = touchPanel.parentNode;
+
+        // swap panels
+        content.insertBefore(buttonArea, touchPanel);
+
+        // Reverse the order of buttons inside buttonArea
+        const buttons = Array.from(buttonArea.children);
+        buttons.reverse().forEach(button => buttonArea.appendChild(button));
+    }
 </script>
 
 <style>
@@ -344,6 +363,11 @@
         border-radius: 50%;
         pointer-events: none;
         display: none;
+    }
+
+    .debug_text {
+        margin-left: 20px;
+        color: #696969;
     }
 </style>
 
