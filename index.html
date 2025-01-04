@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Thai Fiddle</title>
+</head>
+
+<body>
+    <div class="row header">
+        <h1>Thai Fiddle</h1>
+        &nbsp; By Nopparuj-An
+    </div>
+    <div class="row content">
+        <div class="col touchPanel">
+            <div id="touchArea" style="width: 100%; height: 100%;">
+                <p id="text_fingers" style="margin-left: 20px; color: #696969;">Button: Touch to start</p>
+                <p id="text_start" style="margin-left: 20px; color: #696969;">Start: Touch to start</p>
+                <p id="text_pos" style="margin-left: 20px; color: #696969;">Position: Touch to start</p>
+                <p id="text_pressure" style="margin-left: 20px; color: #696969;">Pressure: Touch to start</p>
+                <p id="text_speed" style="margin-left: 20px; color: #696969;">Speed: Touch to start</p>
+                <p id="text_volume" style="margin-left: 20px; color: #696969;">Volume: Touch to start</p>
+                <p id="text_note" style="margin-left: 20px; color: #696969;">Note: Touch to start</p>
+            </div>
+            <div id="touchCursor"></div>
+        </div>
+        <div class="col buttonArea">
+            <button id="button1">ชี้</button>
+            <button id="button2">นาง</button>
+            <button id="button3">กลาง</button>
+            <button id="button4">ก้อย</button>
+        </div>
+    </div>
+</body>
+
+<script>
+    sensitivity_pressure = 50;
+    sensitivity_minimum = 0.2;
+    sensitivity_speed = 3;
+    loop_dt = 0.05;
+    iir_constant = 0.9;
+
+    // Internal variables
+    var activeButtons = new Set();
+    var start_x = 0;
+    var start_y = 0;
+    var pos_y = 0;
+    var pos_y_last = 0;
+    var pressure = 0;   // [-1,1]
+    var speed = 0;      // [-1,1]
+
+    // Music outputs
+    var volume = 0;     // [0,1]
+    var note = 0;       // 0:None, 1:Do, 2:Re, 3:Mi, 4:Fa, 5:Sol, 6:La, 7:Si
+
+    // Start loop =================================================================================
+    setInterval(() => {
+        calculateSpeed();
+    }, loop_dt * 1000);
+
+    // Setup touch area ===========================================================================
+    touchArea.addEventListener('touchmove', handleTouchMove, false);
+    touchArea.addEventListener('touchstart', handleTouchStart, false);
+    touchArea.addEventListener('mousemove', handleMouseMove, false);
+    touchArea.addEventListener('mousedown', handleMouseClick, false);
+
+    // Set start position
+    function handleTouchStart(event) {
+        event.preventDefault();
+        const touch = event.touches[0];
+        start_x = touch.clientX;
+        start_y = touch.clientY;
+        text_start.textContent = `Start: ${start_x}, ${start_y}`;
+    }
+
+    function handleMouseClick(event) {
+        event.preventDefault();
+        start_x = event.clientX;
+        start_y = event.clientY;
+        text_start.textContent = `Start: ${start_x}, ${start_y}`;
+    }
+
+    // Track movement
+    function handleTouchMove(event) {
+        event.preventDefault();
+        const touch = event.touches[0];
+        touchCursor.style.left = `${touch.clientX - 10}px`;
+        touchCursor.style.top = `${touch.clientY - 10}px`;
+        touchCursor.style.display = 'block';
+        handleBowing(touch.clientX, touch.clientY);
+    }
+
+    function handleMouseMove(event) {
+        event.preventDefault();
+        touchCursor.style.left = `${event.clientX - 10}px`;
+        touchCursor.style.top = `${event.clientY - 10}px`;
+        touchCursor.style.display = 'block';
+        handleBowing(event.clientX, event.clientY);
+    }
+
+    // Setup buttons ==============================================================================
+    const buttons = document.querySelectorAll('.buttonArea button');
+    buttons.forEach(button => {
+        button.addEventListener('touchstart', handleButtonTouchStart, false);
+        button.addEventListener('touchend', handleButtonTouchEnd, false);
+        button.addEventListener('mousedown', handleButtonMouseDown, false);
+        button.addEventListener('mouseup', handleButtonMouseUp, false);
+    });
+
+    function handleButtonTouchStart(event) {
+        event.preventDefault();
+        activeButtons.add(event.target);
+        activeButtons = new Set(Array.from(activeButtons).sort((a, b) => a.id.localeCompare(b.id)));
+        text_fingers.textContent = `Button: ${Array.from(activeButtons).map(button => button.innerText).join(', ')}`;
+    }
+
+    function handleButtonTouchEnd(event) {
+        event.preventDefault();
+        activeButtons.delete(event.target);
+        text_fingers.textContent = `Button: ${Array.from(activeButtons).map(button => button.innerText).join(', ')}`;
+    }
+
+    function handleButtonMouseDown(event) {
+        event.preventDefault();
+        activeButtons.add(event.target);
+        text_fingers.textContent = `Button: ${Array.from(activeButtons).map(button => button.innerText).join(', ')}`;
+    }
+
+    function handleButtonMouseUp(event) {
+        event.preventDefault();
+        activeButtons.clear();
+        text_fingers.textContent = 'Button: ';
+    }
+
+    // Calculate music ============================================================================
+    function handleBowing(raw_x, raw_y) {
+        // Calculate position
+        const x = raw_x - start_x;
+        const y = raw_y - start_y;
+        pos_y = y;
+        text_pos.textContent = `Position: ${x}, ${y}`;
+
+        // Calculate pressure [-1,1]
+        pressure = Math.min(1, Math.max(-1, x / sensitivity_pressure));
+        text_pressure.textContent = `Pressure: ${pressure}`;
+
+        // Calculate note
+        if (pressure < -sensitivity_minimum) {
+            start_note = 1;
+        } else if (pressure > sensitivity_minimum) {
+            start_note = 5;
+        } else {
+            start_note = 0;
+        }
+
+        note = Array.from(activeButtons).reduce((acc, cur) => {
+            switch (cur.id) {
+                case 'button4': // ก้อย
+                    return start_note + 4;
+                case 'button3': // กลาง
+                    return start_note + 3;
+                case 'button2': // นาง
+                    return start_note + 2;
+                case 'button1': // ชี้
+                    return start_note + 1;
+                default:
+                    return start_note;
+            }
+        }, start_note);
+        text_note.textContent = `Note: ${note}`;
+    }
+
+    function calculateSpeed() {
+        // Input: pos_y, dt
+        // Output: speed
+        dy = pos_y - pos_y_last;
+
+        // Normalize speed by display height
+        dy = sensitivity_speed * dy / window.innerHeight;
+        raw_speed = dy / loop_dt;
+
+        // Apply IIR filter
+        raw_speed = iir_constant * speed + (1 - iir_constant) * raw_speed;
+
+        // Cap speed to [-1,1]
+        speed = Math.round(Math.min(1, Math.max(-1, raw_speed)) * 1000) / 1000;
+        text_speed.textContent = `Speed: ${speed}`;
+
+        pos_y_last = pos_y;
+
+        // Calculate volume [0,1]
+        if (Math.abs(pressure) < sensitivity_minimum) {
+            volume = 0;
+        } else {
+            volume = Math.abs(speed * pressure);
+        }
+        volume = Math.round(volume * 1000) / 1000;
+        text_volume.textContent = `Volume: ${volume}`;
+    }
+</script>
+
+<style>
+    html {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .col {
+        width: 100%;
+        height: 100%;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        /* padding: 20px; */
+        margin: 5px;
+        flex-grow: 1;
+    }
+
+    .header {
+        height: 50px;
+    }
+
+    .content {
+        flex-grow: 1;
+    }
+
+    .buttonArea {
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .buttonArea button {
+        width: 90%;
+        padding: 40px 0;
+        margin: 5px 0;
+        font-size: 18px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+    }
+
+    .touchPanel {
+        width: 50%;
+    }
+
+    #touchCursor {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: red;
+        border-radius: 50%;
+        pointer-events: none;
+        display: none;
+    }
+</style>
+
+</html>
