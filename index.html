@@ -13,6 +13,7 @@
         <h1>ซออู้</h1>
         &nbsp; By Nopparuj-An
     </div>
+
     <div class="row content">
         <div class="col touchPanel">
             <div id="touchArea" style="width: 100%; height: 100%;">
@@ -36,6 +37,18 @@
             <button id="button5" style="background-color: #0051a7;">X ชี้</button>
             <button id="button6" style="background-color: #0051a7;">Z กลาง</button>
         </div>
+    </div>
+
+    <button id="settingsButton" style="position: fixed; top: 15px; left: 20px; z-index: 1000;">Settings</button>
+    <div id="settingsMenu" style="position: fixed; top: 5px; left: 100px; z-index: 1000; display: none; background: white; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        <label for="keySelect">Key:</label>
+        <select id="keySelect">
+            <option value="A">A</option>
+            <option value="Bb">Bb</option>
+            <option value="B">B</option>
+            <option value="C" selected="selected">C</option>
+        </select>
+        <button onclick="swapPanels()">Swap Panels</button>
     </div>
 </body>
 
@@ -73,10 +86,10 @@
     }).toDestination();
     
     // Thai-Western note mapping (index 0 unused)
-    var noteDefinition_A =  ['A3',  'A3',  'B3',  'C#4', 'D4',  'E4',  'F#4', 'G#4', 'A4',  'B4',  'C#5', 'D5'];
-    var noteDefinition_Bb = ['Bb3', 'Bb3', 'C4',  'D4',  'Eb4', 'F4',  'G4',  'A4',  'Bb4', 'C5',  'D5',  'Eb5'];
-    var noteDefinition_B =  ['B3',  'B3',  'C#4', 'D#4', 'E4',  'F#4', 'G#4', 'A#4', 'B4',  'C#5', 'D#5', 'E5'];
-    var noteDefinition_C =  ['C4',  'C4',  'D4',  'E4',  'F4',  'G4',  'A4',  'B4',  'C5',  'D5',  'E5',  'F5'];
+    var noteDefinition_A =  ['None', 'A3',  'B3',  'C#4', 'D4',  'E4',  'F#4', 'G#4', 'A4',  'B4',  'C#5', 'D5'];
+    var noteDefinition_Bb = ['None', 'Bb3', 'C4',  'D4',  'Eb4', 'F4',  'G4',  'A4',  'Bb4', 'C5',  'D5',  'Eb5'];
+    var noteDefinition_B =  ['None', 'B3',  'C#4', 'D#4', 'E4',  'F#4', 'G#4', 'A#4', 'B4',  'C#5', 'D#5', 'E5'];
+    var noteDefinition_C =  ['None', 'C4',  'D4',  'E4',  'F4',  'G4',  'A4',  'B4',  'C5',  'D5',  'E5',  'F5'];
 
     var noteDefinition = noteDefinition_C;
 
@@ -176,6 +189,12 @@
             case 'ShiftLeft':
                 activeButtons.add(document.getElementById('button4'));
                 break;
+            case 'KeyX':
+                activeButtons.add(document.getElementById('button5'));
+                break;
+            case 'KeyZ':
+                activeButtons.add(document.getElementById('button6'));
+                break;
         }
         activeButtons = new Set(Array.from(activeButtons).sort((a, b) => a.id.localeCompare(b.id)));
         text_fingers.textContent = `Button: ${Array.from(activeButtons).map(button => button.innerText).join(', ')}`;
@@ -195,6 +214,11 @@
             case 'ShiftLeft':
                 activeButtons.delete(document.getElementById('button4'));
                 break;
+            case 'KeyX':
+                activeButtons.delete(document.getElementById('button5'));
+                break;
+            case 'KeyZ':
+                activeButtons.delete(document.getElementById('button6'));
         }
         text_fingers.textContent = `Button: ${Array.from(activeButtons).map(button => button.innerText).join(', ')}`;
     });
@@ -272,7 +296,7 @@
         volume = Math.round(volume * 1000) / 1000;
         text_volume.textContent = `Volume: ${volume}`;
 
-        if (volume > 0.1) {
+        if (volume > 0.1 && note != 0) {
             synth.triggerAttack(noteDefinition[note], Tone.now(), volume);
         } else {
             synth.triggerRelease(Tone.now());
@@ -286,7 +310,11 @@
         const content = touchPanel.parentNode;
 
         // swap panels
-        content.insertBefore(buttonArea, touchPanel);
+        if (content.children[0] === touchPanel) {
+            content.insertBefore(buttonArea, touchPanel);
+        } else {
+            content.insertBefore(touchPanel, buttonArea);
+        }
 
         // Reverse the order of buttons inside buttonArea
         const buttons = Array.from(buttonArea.children);
@@ -310,6 +338,15 @@
         }
         text_keys.textContent = `Key: ${value}`;
     }
+
+    document.getElementById('settingsButton').addEventListener('click', () => {
+        const settingsMenu = document.getElementById('settingsMenu');
+        settingsMenu.style.display = settingsMenu.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('keySelect').addEventListener('change', (event) => {
+        switchKey(event.target.value);
+    });
 </script>
 
 <style>
