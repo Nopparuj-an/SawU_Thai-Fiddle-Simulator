@@ -28,8 +28,8 @@
         </div>
         <div class="col buttonArea">
             <button id="button1">ชี้</button>
-            <button id="button2">นาง</button>
-            <button id="button3">กลาง</button>
+            <button id="button2">กลาง</button>
+            <button id="button3">นาง</button>
             <button id="button4">ก้อย</button>
         </div>
     </div>
@@ -40,7 +40,7 @@
     sensitivity_minimum = 0.2;
     sensitivity_speed = 3;
     loop_dt = 0.05;
-    iir_constant = 0.5;
+    iir_constant = 0.8;
 
     // Internal variables
     var current_time = 0;
@@ -153,6 +153,45 @@
         text_fingers.textContent = 'Button: ';
     }
 
+    // Setup keyboard =============================================================================
+
+    document.addEventListener('keydown', (event) => {
+        switch (event.code) {
+            case 'KeyD':
+                activeButtons.add(document.getElementById('button1'));
+                break;
+            case 'KeyS':
+                activeButtons.add(document.getElementById('button2'));
+                break;
+            case 'KeyA':
+                activeButtons.add(document.getElementById('button3'));
+                break;
+            case 'ShiftLeft':
+                activeButtons.add(document.getElementById('button4'));
+                break;
+        }
+        activeButtons = new Set(Array.from(activeButtons).sort((a, b) => a.id.localeCompare(b.id)));
+        text_fingers.textContent = `Button: ${Array.from(activeButtons).map(button => button.innerText).join(', ')}`;
+    });
+
+    document.addEventListener('keyup', (event) => {
+        switch (event.code) {
+            case 'KeyD':
+                activeButtons.delete(document.getElementById('button1'));
+                break;
+            case 'KeyS':
+                activeButtons.delete(document.getElementById('button2'));
+                break;
+            case 'KeyA':
+                activeButtons.delete(document.getElementById('button3'));
+                break;
+            case 'ShiftLeft':
+                activeButtons.delete(document.getElementById('button4'));
+                break;
+        }
+        text_fingers.textContent = `Button: ${Array.from(activeButtons).map(button => button.innerText).join(', ')}`;
+    });
+
     // Calculate music ============================================================================
     function handleBowing(raw_x, raw_y) {
         // Calculate position
@@ -178,9 +217,9 @@
             switch (cur.id) {
                 case 'button4': // ก้อย
                     return start_note + 4;
-                case 'button3': // กลาง
+                case 'button3': // นาง
                     return start_note + 3;
-                case 'button2': // นาง
+                case 'button2': // กลาง
                     return start_note + 2;
                 case 'button1': // ชี้
                     return start_note + 1;
@@ -223,7 +262,7 @@
         text_volume.textContent = `Volume: ${volume}`;
 
         if (volume > 0.1) {
-            synth.triggerAttack(noteDefintion[note], current_time/1000, volume);
+            synth.triggerAttack(noteDefintion[note], current_time / 1000, volume);
         } else {
             synth.triggerRelease();
         }
