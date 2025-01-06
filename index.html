@@ -44,9 +44,17 @@
         <label for="keySelect">Key:</label>
         <select id="keySelect">
             <option value="A">A</option>
-            <option value="Bb">Bb</option>
+            <option value="Bb">A#/Bb</option>
             <option value="B">B</option>
             <option value="C" selected="selected">C</option>
+            <option value="CsDb">C#/Db</option>
+            <option value="D">D</option>
+            <option value="DsEb">D#/Eb</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="FsGb">F#/Gb</option>
+            <option value="G">G</option>
+            <option value="GsAb">G#/Ab</option>
         </select>
         <button onclick="swapPanels()">Swap Panels</button>
     </div>
@@ -86,10 +94,20 @@
     }).toDestination();
     
     // Thai-Western note mapping (index 0 unused)
-    var noteDefinition_A =  ['None', 'A3',  'B3',  'C#4', 'D4',  'E4',  'F#4', 'G#4', 'A4',  'B4',  'C#5', 'D5'];
-    var noteDefinition_Bb = ['None', 'Bb3', 'C4',  'D4',  'Eb4', 'F4',  'G4',  'A4',  'Bb4', 'C5',  'D5',  'Eb5'];
-    var noteDefinition_B =  ['None', 'B3',  'C#4', 'D#4', 'E4',  'F#4', 'G#4', 'A#4', 'B4',  'C#5', 'D#5', 'E5'];
-    var noteDefinition_C =  ['None', 'C4',  'D4',  'E4',  'F4',  'G4',  'A4',  'B4',  'C5',  'D5',  'E5',  'F5'];
+    var noteDefinition_A =    ['None', 'A3',  'B3',  'C#4', 'D4',  'E4',  'F#4', 'G#4', 'A4',  'B4',  'C#5', 'D5'];
+    var noteDefinition_AsBb = ['None', 'Bb3', 'C4',  'D4',  'Eb4', 'F4',  'G4',  'A4',  'Bb4', 'C5',  'D5',  'Eb5'];
+    var noteDefinition_B =    ['None', 'B3',  'C#4', 'D#4', 'E4',  'F#4', 'G#4', 'A#4', 'B4',  'C#5', 'D#5', 'E5'];
+    var noteDefinition_C =    ['None', 'C4',  'D4',  'E4',  'F4',  'G4',  'A4',  'B4',  'C5',  'D5',  'E5',  'F5'];
+    
+    // Extra notes
+    var noteDefinition_CsDb = ['None', 'Db4', 'Eb4', 'F4',  'Gb4', 'Ab4', 'Bb4', 'C5',  'Db5', 'Eb5', 'F5',  'Gb5'];
+    var noteDefinition_D =    ['None', 'D4',  'E4',  'F#4', 'G4',  'A4',  'B4',  'C#5', 'D5',  'E5',  'F#5', 'G5'];
+    var noteDefinition_DsEb = ['None', 'Eb4', 'F4',  'G4',  'Ab4', 'Bb4', 'C5',  'D5',  'Eb5', 'F5',  'G5',  'Ab5'];
+    var noteDefinition_E =    ['None', 'E4',  'F#4', 'G#4', 'A4',  'B4',  'C#5', 'D#5', 'E5',  'F#5', 'G#5', 'A5'];
+    var noteDefinition_F =    ['None', 'F4',  'G4',  'A4',  'Bb4', 'C5',  'D5',  'E5',  'F5',  'G5',  'A5',  'Bb5'];
+    var noteDefinition_FsGb = ['None', 'Gb4', 'Ab4', 'Bb4', 'B4',  'Db5', 'Eb5', 'F5',  'Gb5', 'Ab5', 'Bb5', 'B5'];
+    var noteDefinition_G =    ['None', 'G4',  'A4',  'B4',  'C5',  'D5',  'E5',  'F#5', 'G5',  'A5',  'B5',  'C6'];
+    var noteDefinition_GsAb = ['None', 'Ab4', 'Bb4', 'C5',  'Db5', 'Eb5', 'F5',  'G5',  'Ab5', 'Bb5', 'C6',  'Db6'];
 
     var noteDefinition = noteDefinition_C;
 
@@ -327,13 +345,37 @@
                 noteDefinition = noteDefinition_A;
                 break;
             case 'Bb':
-                noteDefinition = noteDefinition_Bb;
+                noteDefinition = noteDefinition_AsBb;
                 break;
             case 'B':
                 noteDefinition = noteDefinition_B;
                 break;
             case 'C':
                 noteDefinition = noteDefinition_C;
+                break;
+            case 'CsDb':
+                noteDefinition = noteDefinition_CsDb;
+                break;
+            case 'D':
+                noteDefinition = noteDefinition_D;
+                break;
+            case 'DsEb':
+                noteDefinition = noteDefinition_DsEb;
+                break;
+            case 'E':
+                noteDefinition = noteDefinition_E;
+                break;
+            case 'F':
+                noteDefinition = noteDefinition_F;
+                break;
+            case 'FsGb':
+                noteDefinition = noteDefinition_FsGb;
+                break;
+            case 'G':
+                noteDefinition = noteDefinition_G;
+                break;
+            case 'GsAb':
+                noteDefinition = noteDefinition_GsAb;
                 break;
         }
         text_keys.textContent = `Key: ${value}`;
